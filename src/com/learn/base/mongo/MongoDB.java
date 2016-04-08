@@ -55,10 +55,100 @@ public class MongoDB {
 //		mongoDB.insertBatch(dbObjects, "javadb");
 		
 		//5.根据Id进行删除
-		mongoDB.deleteById("57078ad0889085118d752977", "javadb");
+//		mongoDB.deleteById("57078ad0889085118d752977", "javadb");
+		//6.根据条件删除数据
+//		DBObject jim = new BasicDBObject("name","jim");
+//		mongoDB.deleteByIds(jim, "javadb");
+		//7.更新操作 为集合增加属性
+//		DBObject dbobject = new BasicDBObject();
+//		
+//		dbobject.put("$set", new BasicDBObject("email", "xiyang1321@126.com"));
+//		
+//		mongoDB.update(new BasicDBObject(), dbobject, false, true, "javadb");
 		
+		//8.查询集合中的name和age.
+//		DBObject keys = new BasicDBObject();
+//		keys.put("_id", false);
+//		keys.put("name", true);
+//		keys.put("age", true);
+//		DBCursor cursor = mongoDB.find(null, keys, "javadb");
+//	    while (cursor.hasNext()) {
+//		    DBObject object = cursor.next();
+//		    System.out.println(object.get("name"));
+//	    }
+	    
+	    /**
+		 * 8.分页例子
+		 */
+		DBCursor cursor = mongoDB.find(null, null, 0, 3, "javadb");
+	    while (cursor.hasNext()) {
+		    DBObject object = cursor.next();
+		    System.out.print(object.get("name")+"-->");
+		    System.out.print(object.get("age")+"-->");
+		    System.out.println(object.get("e"));
+	    }		
+		//关闭连接对象
+		connection.close();
 	}
 
+	/**
+	 * 查询器(分页)
+	 * @param ref
+	 * @param keys
+	 * @param start
+	 * @param limit
+	 * @return
+	 */
+	public DBCursor find(DBObject ref, 
+			DBObject keys,
+			int start,
+			int limit,
+			String collName){
+		DBCursor cur = find(ref, keys, collName);
+		return cur.limit(limit).skip(start);
+	}
+	/**
+	 * 查询器(不分页)
+	 * @param ref
+	 * @param keys
+	 * @param start
+	 * @param limit
+	 * @param collName
+	 * @return
+	 */
+	public DBCursor find(DBObject ref,
+			DBObject keys,
+			String collName){
+		//1.得到集合
+		DBCollection coll = db.getCollection(collName);
+		DBCursor cur = coll.find(ref, keys);
+		return cur;
+	}
+	
+	/**
+	 * @param _find 查询器
+	 * @param _dbObject 更新器
+	 * @param upsert 更新或者插入
+	 * @param multi 是否批量更新
+	 * @param _collectionName 集合名称
+	 * @return
+	 */
+	private int update(DBObject _find,DBObject _dbObject, boolean upsert, boolean multi, String _collectionName){
+		if (db.collectionExists(_collectionName)) {
+			DBCollection dbCollection = db.getCollection(_collectionName);
+			dbCollection.update(_find, _dbObject, upsert, multi);
+		}
+		return 0;
+	}
+	private int deleteByIds(DBObject _object, String _collectionName) {
+		if (db.collectionExists(_collectionName)) {
+			DBCollection dbCollection = db.getCollection(_collectionName);
+			WriteResult writeResult = dbCollection.remove(_object);
+			return writeResult.getN();
+		}
+		return 0;
+	}
+	
 	private int deleteById(String _objectId, String _collectionName) {
 		if (db.collectionExists(_collectionName)) {
 			DBCollection dbCollection = db.getCollection(_collectionName);
